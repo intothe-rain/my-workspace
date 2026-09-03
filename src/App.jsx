@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Layout from './components/Layout'
+import PasswordGate from './components/PasswordGate'
 import Home from './pages/Home'
 import Bookmarks from './pages/Bookmarks'
 import Notes from './pages/Notes'
@@ -11,6 +12,7 @@ import './styles/dashboard.css'
 function App() {
   return (
     <Router>
+      <PasswordGate>
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -21,6 +23,7 @@ function App() {
           <Route path="/api" element={<ApiHub />} />
         </Routes>
       </Layout>
+      </PasswordGate>
     </Router>
   )
 }
