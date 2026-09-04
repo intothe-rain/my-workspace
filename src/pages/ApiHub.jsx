@@ -5,7 +5,8 @@ import {
   HiOutlineExternalLink,
   HiOutlineCloud,
   HiOutlineBookOpen,
-  HiOutlineVolumeUp
+  HiOutlineVolumeUp,
+  HiOutlineTruck
 } from 'react-icons/hi'
 
 function ApiHub() {
@@ -14,6 +15,8 @@ function ApiHub() {
   const [joke, setJoke] = useState(null)
   const [quote, setQuote] = useState(null)
   const [word, setWord] = useState(null)
+  const [traffic, setTraffic] = useState(null)
+  const [tmType, setTmType] = useState('1')
   const [loading, setLoading] = useState(false)
 
   const apis = [
@@ -21,6 +24,7 @@ function ApiHub() {
     { id: 'joke', name: '유머', icon: HiOutlineGlobe },
     { id: 'quote', name: '명언', icon: HiOutlineGlobe },
     { id: 'english', name: '오늘의 영어', icon: HiOutlineBookOpen },
+    { id: 'traffic', name: '고속도로 교통량', icon: HiOutlineTruck },
   ]
 
   const fetchWeather = async () => {
@@ -66,7 +70,42 @@ function ApiHub() {
     else if (activeApi === 'joke') fetchJoke()
     else if (activeApi === 'quote') fetchQuote()
     else if (activeApi === 'english') fetchWord()
+    else if (activeApi === 'traffic') fetchTraffic(tmType)
   }, [activeApi])
+
+  const fetchTraffic = async (type = tmType) => {
+    setLoading(true)
+    setTraffic(null)
+    try {
+      const response = await fetch(`/api/traffic?tmType=${type}`)
+      const data = await response.json()
+      if (data.code === 'SUCCESS') setTraffic(data)
+    } catch (error) {
+      console.error('Traffic fetch error:', error)
+    }
+    setLoading(false)
+  }
+
+  const handleTmTypeChange = (type) => {
+    setTmType(type)
+    fetchTraffic(type)
+  }
+
+  const getTrafficSummary = () => {
+    if (!traffic?.trafficAll) return null
+    const rows = traffic.trafficAll
+    const sum = (filter) => rows.filter(filter).reduce((a, r) => a + Number(r.trafficAmout || 0), 0)
+    const total = sum(() => true)
+    const hipass = sum((r) => r.tcsName === 'hi-pass')
+    const tcs = total - hipass
+    const byCar = ['1', '2', '3', '4', '5', '6'].map((c) => ({
+      car: `${c}종`,
+      tcs: sum((r) => r.carType === c && r.tcsName === 'TCS'),
+      hipass: sum((r) => r.carType === c && r.tcsName === 'hi-pass'),
+    })).map((r) => ({ ...r, total: r.tcs + r.hipass }))
+    const first = rows[0]
+    return { total, hipass, tcs, byCar, sumDate: first?.sumDate, sumTm: first?.sumTm, tmName: first?.tmName }
+  }
 
   const fetchWord = async () => {
     setLoading(true)
@@ -231,6 +270,70 @@ function ApiHub() {
               <div className="error">단어를 불러올 수 없습니다. 새로고침을 눌러주세요.</div>
             )}
             <p className="api-source">출처: Random Word API + Free Dictionary API (무료, 키 불필요)</p>
+          </div>
+        )}
+
+        {activeApi === 'traffic' && (
+          <div className="api-card">
+            <div className="api-card-header">
+              <h3>고속도로 실시간 교통량</h3>
+              <div className="traffic-controls">
+                <select value={tmType} onChange={(e) => handleTmTypeChange(e.target.value)}>
+                  <option value="1">1시간 단위</option>
+                  <option value="2">15분 단위</option>
+                  <option value="3">5분 단위</option>
+                </select>
+                <button className="btn-icon" onClick={() => fetchTraffic()}>
+                  <HiOutlineRefresh size={18} />
+                </button>
+              </div>
+            </div>
+            {loading ? (
+              <div className="loading">교통량 불러오는 중...</div>
+            ) : (() => {
+              const s = getTrafficSummary()
+              if (!s) return <div className="error">교통량 정보를 불러올 수 없습니다.</div>
+              return (
+                <div className="traffic-display">
+                  <p className="traffic-time">집계 기준: {s.sumDate} {s.sumTm}시 ({s.tmName})</p>
+                  <div className="traffic-stats">
+                    <div className="traffic-stat">
+                      <span className="stat-num">{s.total.toLocaleString()}</span>
+                      <span className="stat-lbl">총 통행량 (대)</span>
+                    </div>
+                    <div className="traffic-stat">
+                      <span className="stat-num">{s.hipass.toLocaleString()}</span>
+                      <span className="stat-lbl">하이패스 (대)</span>
+                    </div>
+                    <div className="traffic-stat">
+                      <span className="stat-num">{s.tcs.toLocaleString()}</span>
+                      <span className="stat-lbl">TCS (대)</span>
+                    </div>
+                  </div>
+                  <table className="traffic-table">
+                    <thead>
+                      <tr>
+                        <th>차종</th>
+                        <th>TCS</th>
+                        <th>하이패스</th>
+                        <th>합계</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {s.byCar.map((row) => (
+                        <tr key={row.car}>
+                          <td>{row.car}</td>
+                          <td>{row.tcs.toLocaleString()}</td>
+                          <td>{row.hipass.toLocaleString()}</td>
+                          <td className="traffic-total">{row.total.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            })()}
+            <p className="api-source">출처: 한국도로공사 고속도로 공공데이터 (data.ex.co.kr)</p>
           </div>
         )}
       </div>

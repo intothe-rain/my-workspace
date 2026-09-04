@@ -1513,6 +1513,96 @@ body {
   border-left: 2px solid var(--accent-primary);
 }
 
+/* Traffic */
+.traffic-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.traffic-controls select {
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 13px;
+  outline: none;
+}
+
+.traffic-display {
+  padding: 8px 4px;
+}
+
+.traffic-time {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 16px;
+}
+
+.traffic-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.traffic-stat {
+  text-align: center;
+  padding: 16px 8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+
+.traffic-stat .stat-num {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent-secondary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.traffic-stat .stat-lbl {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.traffic-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.traffic-table th,
+.traffic-table td {
+  padding: 10px 12px;
+  text-align: right;
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 13px;
+}
+
+.traffic-table th:first-child,
+.traffic-table td:first-child {
+  text-align: left;
+}
+
+.traffic-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.traffic-table td {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.traffic-total {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .sidebar {
