@@ -3,7 +3,9 @@ import {
   HiOutlineGlobe,
   HiOutlineRefresh,
   HiOutlineExternalLink,
-  HiOutlineCloud
+  HiOutlineCloud,
+  HiOutlineBookOpen,
+  HiOutlineVolumeUp
 } from 'react-icons/hi'
 
 function ApiHub() {
@@ -11,12 +13,14 @@ function ApiHub() {
   const [weather, setWeather] = useState(null)
   const [joke, setJoke] = useState(null)
   const [quote, setQuote] = useState(null)
+  const [word, setWord] = useState(null)
   const [loading, setLoading] = useState(false)
 
   const apis = [
     { id: 'weather', name: '날씨', icon: HiOutlineCloud },
     { id: 'joke', name: '유머', icon: HiOutlineGlobe },
     { id: 'quote', name: '명언', icon: HiOutlineGlobe },
+    { id: 'english', name: '오늘의 영어', icon: HiOutlineBookOpen },
   ]
 
   const fetchWeather = async () => {
@@ -61,7 +65,34 @@ function ApiHub() {
     if (activeApi === 'weather') fetchWeather()
     else if (activeApi === 'joke') fetchJoke()
     else if (activeApi === 'quote') fetchQuote()
+    else if (activeApi === 'english') fetchWord()
   }, [activeApi])
+
+  const fetchWord = async () => {
+    setLoading(true)
+    setWord(null)
+    try {
+      // 랜덤 단어는 사전에 없는 경우가 많아 최대 5번 재시도
+      for (let i = 0; i < 5; i++) {
+        const wordRes = await fetch('https://random-word-api.herokuapp.com/word?number=1')
+        const [randomWord] = await wordRes.json()
+        const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${randomWord}`)
+        if (dictRes.ok) {
+          const [entry] = await dictRes.json()
+          setWord(entry)
+          break
+        }
+      }
+    } catch (error) {
+      console.error('Word fetch error:', error)
+    }
+    setLoading(false)
+  }
+
+  const playAudio = () => {
+    const audioUrl = word?.phonetics?.find(p => p.audio)?.audio
+    if (audioUrl) new Audio(audioUrl).play()
+  }
 
   const getWeatherIcon = (code) => {
     const icons = {
@@ -162,6 +193,44 @@ function ApiHub() {
               <div className="error">명언을 불러올 수 없습니다.</div>
             )}
             <p className="api-source">출처: DummyJSON (무료)</p>
+          </div>
+        )}
+
+        {activeApi === 'english' && (
+          <div className="api-card">
+            <div className="api-card-header">
+              <h3>오늘의 영어 단어</h3>
+              <button className="btn-icon" onClick={fetchWord}>
+                <HiOutlineRefresh size={18} />
+              </button>
+            </div>
+            {loading ? (
+              <div className="loading">단어 찾는 중...</div>
+            ) : word ? (
+              <div className="word-display">
+                <div className="word-top">
+                  <span className="word-text">{word.word}</span>
+                  {word.phonetics?.find(p => p.audio) && (
+                    <button className="btn-icon" onClick={playAudio} title="발음 듣기">
+                      <HiOutlineVolumeUp size={20} />
+                    </button>
+                  )}
+                </div>
+                {word.phonetic && <p className="word-phonetic">{word.phonetic}</p>}
+                {word.meanings?.slice(0, 2).map((meaning, i) => (
+                  <div key={i} className="word-meaning">
+                    <span className="word-pos">{meaning.partOfSpeech}</span>
+                    <p className="word-definition">{meaning.definitions[0]?.definition}</p>
+                    {meaning.definitions[0]?.example && (
+                      <p className="word-example">"{meaning.definitions[0].example}"</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="error">단어를 불러올 수 없습니다. 새로고침을 눌러주세요.</div>
+            )}
+            <p className="api-source">출처: Random Word API + Free Dictionary API (무료, 키 불필요)</p>
           </div>
         )}
       </div>
