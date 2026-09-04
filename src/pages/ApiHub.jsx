@@ -111,17 +111,9 @@ function ApiHub() {
     setLoading(true)
     setWord(null)
     try {
-      // 랜덤 단어는 사전에 없는 경우가 많아 최대 5번 재시도
-      for (let i = 0; i < 5; i++) {
-        const wordRes = await fetch('https://random-word-api.herokuapp.com/word?number=1')
-        const [randomWord] = await wordRes.json()
-        const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${randomWord}`)
-        if (dictRes.ok) {
-          const [entry] = await dictRes.json()
-          setWord(entry)
-          break
-        }
-      }
+      const response = await fetch('/api/word')
+      const data = await response.json()
+      if (data.word) setWord(data.word)
     } catch (error) {
       console.error('Word fetch error:', error)
     }

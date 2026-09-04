@@ -11,6 +11,10 @@ export default defineConfig(({ mode }) => {
     server: {
       // 로컬 개발용: /api/traffic 요청을 도로공사 API로 전달 (키 자동 첨부)
       proxy: {
+        '/api/word': {
+          target: 'https://my-workspace-coral.vercel.app',
+          changeOrigin: true,
+        },
         '/api/traffic': {
           target: 'https://data.ex.co.kr',
           changeOrigin: true,
